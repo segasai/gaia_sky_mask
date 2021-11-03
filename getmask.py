@@ -11,7 +11,11 @@ ffi = FFI()
 WSDB_HOST = open('WSDB_HOST').read()
 
 
-def getmask(ra0, dec0, step_asec, npix):
+def getrad(Gmag):
+    return np.maximum(630. * 1.396**(-Gmag), 1)
+
+
+def getmask(ra0, dec0, step_asec, npix, binning=4):
     """
     Return the integer mask and WCS object for a gaia based sky mask
     Arguments
@@ -19,7 +23,7 @@ def getmask(ra0, dec0, step_asec, npix):
     pixel size in arcsec
     number of pixels
     """
-    step = step_asec / 3600
+    step = step_asec / 3600.
     wcdict = dict(CRVAL1=ra0,
                   CRVAL2=dec0,
                   CRPIX1=(npix + 1) / 2,
@@ -32,8 +36,7 @@ def getmask(ra0, dec0, step_asec, npix):
                   CTYPE2='DEC--TAN')
 
     wc = pywcs.WCS(wcdict)
-    '''ra, dec = healpy.pix2ang(nsidex, iis, lonlat=True, nest=True)'''
-    pad = 0.2  # padding for bright stars
+    pad = 0.2  # padding in degrees for bright stars
     maxrad = npix * np.sqrt(2) * step + pad
     ra, dec, g = sqlutilpy.get(
         '''select ra,dec,phot_g_mean_mag from gaia_edr3.gaia_source
@@ -42,7 +45,7 @@ def getmask(ra0, dec0, step_asec, npix):
     # hpx = healpy.ang2pix(nsidex, ra, dec, lonlat=True, nest=True)
     mags = np.minimum(g, 20)
 
-    rads = np.maximum(630. * 1.396**(-mags), 1)
+    rads = getrad(mags)
     rads = rads / step_asec  # in pixels now
     nstars = len(ra)
 
