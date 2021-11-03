@@ -34,7 +34,7 @@ def getmask(ra0, dec0, step_asec, npix, binning=4):
                   CD2_1=0,
                   CTYPE1='RA---TAN',
                   CTYPE2='DEC--TAN')
-
+    assert (binning in [1, 2, 4])
     wc = pywcs.WCS(wcdict)
     pad = 0.2  # padding in degrees for bright stars
     maxrad = npix * np.sqrt(2) * step + pad
@@ -65,6 +65,6 @@ def getmask(ra0, dec0, step_asec, npix, binning=4):
         Cargs[k] = ffi.cast('float*', _filler.ffi.from_buffer(Xargs[k]))
     Cargs['ima'] = ffi.cast('int*', _filler.ffi.from_buffer(ima))
     _filler.lib.procima(Cargs['ima'], npix, Cargs['xs'], Cargs['ys'],
-                        Cargs['rads'], nstars)
+                        Cargs['rads'], nstars, binning)
 
     return ima, wc
