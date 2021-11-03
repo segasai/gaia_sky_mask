@@ -5,11 +5,10 @@ ffibuilder = FFI()
 ffibuilder.set_source(
     "_filler",
     open('filler_src.c').read(),
-    libraries=['m'],  #
-)  # or a list of libraries to link with
+    libraries=['m'],
+)
 
-ffibuilder.cdef("""     // some declarations from the man page
-
+ffibuilder.cdef("""
 void procima(
    int *ima,
    int npix,
