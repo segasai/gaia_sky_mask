@@ -1,3 +1,4 @@
+The code to make sky masks based on gaia
 
 getmask.getmask is the main routine
 
