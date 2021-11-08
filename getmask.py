@@ -14,10 +14,17 @@ WSDB_HOST = open('WSDB_HOST').read()
 
 
 def getrad(Gmag):
+    """ formula approximately matching the radius where
+    fibermag ~=20
+    """
     return 600. * 1.4**(-Gmag)
 
 
 def getangle(x, y):
+    """ for 4 points x,y determine
+    the rotation angle to approximately align 
+    the coordinate system with one of the axes
+    """
     pos = np.argmax(y)
     pos1 = (pos + 3) % 4
     angle = np.arctan2(y[pos] - y[pos1], x[pos] - x[pos1])
@@ -25,6 +32,7 @@ def getangle(x, y):
 
 
 def getwcs0(ra0, dec0, crpix1, crpix2, angle, step):
+    """ get the wcs dictionary"""
     return dict(CRVAL1=ra0,
                 CRVAL2=dec0,
                 CRPIX1=crpix1,
@@ -38,6 +46,10 @@ def getwcs0(ra0, dec0, crpix1, crpix2, angle, step):
 
 
 def getwcs(nside, hpx, step_asec=1):
+    """
+    get the angle and pixel size for a given healpix
+    """
+    expand = 1.05  # extra expansion
     step = step_asec / 3600
     ra0, dec0 = healpy.pix2ang(nside, hpx, lonlat=True, nest=True)
     xyz = healpy.boundaries(nside, hpx, step=1, nest=True)
@@ -49,7 +61,6 @@ def getwcs(nside, hpx, step_asec=1):
     wc = pywcs.WCS(getwcs0(ra0, dec0, 1, 1, angle, step))
     x, y = wc.world_to_pixel(
         acoo.SkyCoord(ra=edges[:, 0] * auni.deg, dec=edges[:, 1] * auni.deg))
-    expand = 1.05
     npix = 2 * int(np.ceil(expand * max(np.max(np.abs(x)), np.max(np.abs(y)))))
     # ensure rectangular
     return angle, npix
