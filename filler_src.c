@@ -44,3 +44,37 @@ void procima(
 	}
     }
 }
+
+
+
+void procima_pix(
+	     int *ima,
+	     int npix,
+	     float *xs,
+	     float *ys,
+	     int nstar,
+	     int binning)
+{
+  for(int i=0;i<nstar;i++)
+    {
+      float xcen  = xs[i];
+      float ycen = ys[i];
+      int xi = round(xs[i]); 
+      int yi = round(ys[i]);
+      if ((xi<0)|| (xi>=npix) ||(yi<0)||(yi>=npix))
+	{continue;}
+      for(int ii=0;ii<binning ; ii++)
+	{ 
+	  float curx1 = xi -0.5 +  0.5 * (ii+ 1.0)/binning;
+	  for(int jj=0;jj<binning; jj++)
+	    {
+	      float cury1 = yi -0.5 +  0.5 * (jj+1.0 )/binning;
+	      if (((curx1-xcen)<.5/binning)&&((cury1-ycen)<.5/binning))
+		{
+		  ima[xi*npix+yi] = ima[xi*npix+yi]
+		    | (1<<(ii+binning*jj));
+		}
+	    }
+	}
+    }
+}
