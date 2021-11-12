@@ -67,6 +67,16 @@ def getwcs(nside, hpx, step_asec=1):
 
 
 def getmask_hpx(nside, hpx, ofname):
+    """
+    Create the fits sky mask
+
+    Parameters
+    ----------
+    nside: int
+    hpx: int
+    ofname: string
+
+    """
     ra0, dec0 = healpy.pix2ang(nside, hpx, lonlat=True, nest=True)
     step_asec = 1
     angle, npix = getwcs(nside, hpx, step_asec=step_asec)
@@ -80,6 +90,9 @@ def getmask_hpx(nside, hpx, ofname):
 
 
 def doall(nthreads=36):
+    """
+    Process all the hpxes
+    """
     nside = 64
     pool = mp.Pool(nthreads)
     res = []
@@ -101,6 +114,7 @@ def getmask(ra0, dec0, step_asec, npix, angle=0, binning=4, epoch=2022):
     ra0,dec0 center
     pixel size in arcsec
     number of pixels
+    angle is the prescribed rotation angle of the projection
     """
     minrad_asec, maxrad_asec = 1.5, 1000
 
