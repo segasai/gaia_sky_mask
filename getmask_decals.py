@@ -2,7 +2,6 @@ import numpy as np
 import os
 import astropy.units as auni
 import astropy.coordinates as acoo
-import sqlutilpy
 import astropy.wcs as pywcs
 import healpy
 from cffi import FFI
@@ -10,13 +9,16 @@ import _filler
 import astropy.io.fits as pyfits
 import multiprocessing as mp
 import pickle
-from getmask import getwcs, getwcs0
-ffi = FFI()
 import fitsio
+from getmask import getwcs, getwcs0
+
+ffi = FFI()
+
 
 class si:
     DB = None
-    nsideDB= None
+    nsideDB = None
+
 
 def getdb(nsidedb):
     D = pickle.load(open('blobdb_%d.pkl' % nsidedb, 'rb'))
@@ -56,10 +58,8 @@ def proc_ima(f, brickname, hemi):
     dat = fitsio.read(f)
     wc = pywcs.WCS(hdr)
     xind = dat > -1
-    nx = dat.shape[0]
-    #ygrid, xgrid = np.mgrid[:nx, :nx]
-    y,x=np.nonzero(xind)
-    C = wc.pixel_to_world(x,y)#xgrid[xind], ygrid[xind])
+    y, x = np.nonzero(xind)
+    C = wc.pixel_to_world(x, y)
     return C.ra.deg, C.dec.deg
 
 
@@ -76,7 +76,7 @@ def getmask_hpx(nside, hpx, ofname, DB=None, nsideDB=None):
     xgrid, ygrid = np.mgrid[:npix, :npix]
     wc = pywcs.WCS(wcdict)
     C = wc.pixel_to_world(xgrid, ygrid)
-    del xgrid,ygrid
+    del xgrid, ygrid
     hpxopt = healpy.ang2pix(nsideDB,
                             C.ra.deg,
                             C.dec.deg,
@@ -94,7 +94,6 @@ def getmask_hpx(nside, hpx, ofname, DB=None, nsideDB=None):
         curra, curdec = proc_ima(curf, curbrick, curhemi)
         cury, curx = wc.world_to_pixel(
             acoo.SkyCoord(ra=curra * auni.deg, dec=curdec * auni.deg))
-        #curx,cury=[np.round(_).astype(int) for _ in [curx,cury]]
         xind = (curx >= -.5) & (cury < npix) & (curx >= -.5) & (cury < npix)
         fill_me(ima, curx[xind], cury[xind], binning)
 
@@ -112,20 +111,17 @@ def doall(nthreads=32):
     nsideDB = 256
     DB = getdb(nsideDB)
     si.DB = DB
-    si.nsideDB=nsideDB
+    si.nsideDB = nsideDB
     pool = mp.Pool(nthreads, maxtasksperchild=4)
     for hpx in range(12 * nside * nside):
-        ra,dec = healpy.pix2ang(nside, hpx, lonlat=True, nest=True)
-        if dec<-33:
+        ra, dec = healpy.pix2ang(nside, hpx, lonlat=True, nest=True)
+        if dec < -33:
             continue
         ofname = 'data/ls_skymap-%05d.fits.gz' % hpx
         if os.path.exists(ofname):
             # do not overwrite
-            continue 
-        res.append((hpx,
-                    pool.apply_async(
-                        getmask_hpx,
-                        (nside, hpx, ofname))))
+            continue
+        res.append((hpx, pool.apply_async(getmask_hpx, (nside, hpx, ofname))))
     for r in res:
         hpx, r = r
         r.get()
